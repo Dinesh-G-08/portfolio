@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dinesh G — Player Profile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12121e;
+    --bg-2:#191928;
+    --panel:#22223a;
+    --panel-2:#292948;
+    --border:#4a4a72;
+    --border-dark:#0c0c16;
+    --text:#f2f2f7;
+    --text-dim:#a6a6cc;
+    --text-dimmer:#6b6b93;
+    --hp:#ef476f;
+    --xp:#38bdf8;
+    --gold:#ffd23f;
+    --green:#5ee372;
+    --purple:#b98af8;
+    --common:#9aa0ac;
+    --uncommon:#5ee372;
+    --rare:#38bdf8;
+    --epic:#b98af8;
+    --pixel:'Press Start 2P', monospace;
+    --vt:'VT323', monospace;
+  }
+
+  *{ box-sizing:border-box; }
+  html, body{ height:100%; }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; }
+    .track{ transition:transform 0.001ms !important; }
+  }
+
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--vt);
+    font-size:19px;
+    line-height:1.5;
+    background-image:
+      linear-gradient(var(--bg-2) 1px, transparent 1px),
+      linear-gradient(90deg, var(--bg-2) 1px, transparent 1px);
+    background-size:28px 28px;
+    display:flex;
+    flex-direction:column;
+    height:100dvh;
+    overflow:hidden;
+  }
+
+  a{ color:var(--xp); }
+  ::selection{ background:var(--gold); color:#12121e; }
+
+  h1,h2,h3, .pixel-font{ font-family:var(--pixel); }
+
+  .pixel-panel{
+    background:var(--panel);
+    border:4px solid var(--border-dark);
+    box-shadow:
+      0 0 0 4px var(--border),
+      6px 6px 0 0 var(--border-dark);
+    border-radius:0;
+  }
+
+  .pixel-btn{
+    font-family:var(--pixel);
+    font-size:11px;
+    color:var(--text);
+    background:var(--panel-2);
+    border:3px solid var(--border-dark);
+    box-shadow:0 0 0 3px var(--border), 4px 4px 0 0 var(--border-dark);
+    padding:12px 16px;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    cursor:pointer;
+    transition:transform .08s ease;
+  }
+  .pixel-btn:hover{ color:var(--gold); }
+  .pixel-btn:active, .pixel-btn.press{
+    transform:translate(4px,4px);
+    box-shadow:0 0 0 3px var(--border), 0 0 0 0 var(--border-dark);
+  }
+  .pixel-btn.gold{ background:var(--gold); color:#12121e; }
+  .pixel-btn.gold:hover{ color:#12121e; filter:brightness(1.1); }
+  .pixel-btn:disabled{ opacity:0.35; cursor:default; }
+  .pixel-btn:disabled:hover{ color:var(--text); }
+
+  /* ---------- HUD top bar ---------- */
+  .hud{
+    flex-shrink:0;
+    display:flex;
+    align-items:center;
+    gap:18px;
+    padding:12px clamp(14px,4vw,32px);
+    background:var(--bg-2);
+    border-bottom:4px solid var(--border-dark);
+    box-shadow:0 4px 0 0 var(--border);
+    flex-wrap:wrap;
+    position:relative;
+    z-index:50;
+  }
+  .hud-avatar{
+    width:40px; height:40px;
+    display:grid;
+    grid-template-columns:repeat(8,1fr);
+    grid-template-rows:repeat(8,1fr);
+    flex-shrink:0;
+    border:2px solid var(--border-dark);
+  }
+  .hud-name{ font-family:var(--pixel); font-size:12px; color:var(--gold); }
+  .hud-lvl{ font-family:var(--pixel); font-size:10px; color:var(--text-dim); }
+  .hud-bars{ display:flex; flex-direction:column; gap:5px; flex:1; min-width:160px; max-width:260px; }
+  .bar-row{ display:flex; align-items:center; gap:8px; }
+  .bar-label{ font-family:var(--pixel); font-size:8px; color:var(--text-dimmer); width:26px; flex-shrink:0; }
+  .bar-track{ flex:1; height:12px; background:var(--border-dark); border:2px solid var(--border-dark); box-shadow:0 0 0 1px var(--border); position:relative; overflow:hidden; }
+  .bar-fill{ height:100%; }
+  .bar-fill.hp{ background:var(--hp); width:88%; }
+  .bar-fill.xp{ background:var(--xp); width:73.6%; }
+  .hud-coins{ margin-left:auto; font-family:var(--pixel); font-size:11px; color:var(--gold); display:flex; align-items:center; gap:6px; }
+  .coin-icon{ width:14px; height:14px; background:var(--gold); border:2px solid var(--border-dark); flex-shrink:0; }
+
+  /* ---------- world map nav ---------- */
+  .worldmap{ flex-shrink:0; padding:16px clamp(14px,4vw,32px) 8px; position:relative; z-index:50; background:var(--bg); }
+  .map-track{ display:flex; align-items:center; gap:0; overflow-x:auto; padding-bottom:4px; }
+  .map-node{
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+    text-decoration:none; flex-shrink:0; padding:0 6px; background:none; border:none; cursor:pointer;
+  }
+  .node-circle{
+    width:48px; height:48px;
+    background:var(--panel-2);
+    border:3px solid var(--border-dark);
+    box-shadow:0 0 0 3px var(--border);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--pixel); font-size:15px; color:var(--text-dim);
+    transition:transform .12s ease, color .12s ease;
+  }
+  .map-node:hover .node-circle{ color:var(--gold); transform:translateY(-3px); }
+  .map-node.active .node-circle{ background:var(--gold); color:#12121e; box-shadow:0 0 0 3px var(--xp); }
+  .node-label{ font-family:var(--pixel); font-size:8px; color:var(--text-dimmer); text-align:center; white-space:nowrap; }
+  .map-node.active .node-label{ color:var(--gold); }
+  .map-connector{ width:44px; height:4px; background:var(--border); flex-shrink:0; margin-bottom:24px;
+    background-image:linear-gradient(90deg, var(--border) 50%, transparent 50%); background-size:10px 4px; }
+
+  /* ---------- sliding viewport ---------- */
+  .viewport{
+    flex:1;
+    min-height:0;
+    position:relative;
+    overflow:hidden;
+  }
+  .track{
+    display:flex;
+    height:100%;
+    width:500%;
+    transition:transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change:transform;
+  }
+  .page{
+    width:20%;
+    height:100%;
+    overflow-y:auto;
+    padding:26px clamp(14px,4vw,32px) 40px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .page-inner{ max-width:1000px; margin:0 auto; }
+
+  .stage-label{
+    display:inline-block;
+    font-family:var(--pixel); font-size:10px; color:var(--bg);
+    background:var(--gold);
+    padding:5px 10px;
+    margin-bottom:14px;
+  }
+  h2.section-title{ font-size:18px; color:var(--text); margin:0 0 22px; }
+
+  .panel-pad{ padding:22px 24px; }
+
+  /* ---------- side arrows ---------- */
+  .nav-arrow{
+    position:absolute;
+    top:50%;
+    transform:translateY(-50%);
+    z-index:40;
+    padding:14px 10px;
+    font-size:14px;
+  }
+  .nav-arrow.left{ left:10px; }
+  .nav-arrow.right{ right:10px; }
+  @media (max-width:640px){
+    .nav-arrow{ padding:10px 8px; font-size:11px; }
+  }
+
+  /* ---------- about / player profile ---------- */
+  .profile-grid{ display:grid; grid-template-columns:150px 1fr; gap:26px; }
+  @media (max-width:600px){ .profile-grid{ grid-template-columns:1fr; } }
+
+  .avatar-big{
+    width:100%; aspect-ratio:1;
+    display:grid;
+    grid-template-columns:repeat(8,1fr);
+    grid-template-rows:repeat(8,1fr);
+    border:3px solid var(--border-dark);
+    box-shadow:0 0 0 3px var(--border);
+  }
+  .avatar-tag{ text-align:center; font-family:var(--pixel); font-size:9px; color:var(--gold); margin-top:10px; }
+
+  .bio-text{ color:var(--text-dim); font-size:20px; margin:0 0 18px; }
+  .bio-text .hi{ color:var(--text); }
+  .bio-text .kw{ color:var(--xp); }
+
+  .stat-list{ display:flex; flex-direction:column; gap:10px; }
+  .stat-line{ display:flex; align-items:center; gap:10px; }
+  .stat-name{ font-family:var(--pixel); font-size:9px; color:var(--text-dim); width:150px; flex-shrink:0; }
+  .stat-bar{ flex:1; height:16px; background:var(--border-dark); border:2px solid var(--border-dark); box-shadow:0 0 0 1px var(--border); }
+  .stat-fill{ height:100%; background:var(--green); }
+  .stat-val{ font-family:var(--pixel); font-size:9px; color:var(--text-dimmer); width:36px; text-align:right; }
+
+  /* ---------- inventory / skills ---------- */
+  .inventory-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(96px,1fr)); gap:14px; }
+  .item-slot{
+    background:var(--panel-2);
+    border:3px solid var(--border-dark);
+    padding:14px 8px;
+    text-align:center;
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+  }
+  .item-icon{ width:34px; height:34px; border:2px solid var(--border-dark); display:flex; align-items:center; justify-content:center; font-family:var(--pixel); font-size:11px; color:#12121e; }
+  .item-slot.common .item-icon{ background:var(--common); box-shadow:0 0 0 2px var(--common); }
+  .item-slot.uncommon .item-icon{ background:var(--uncommon); box-shadow:0 0 0 2px var(--uncommon); }
+  .item-slot.rare .item-icon{ background:var(--rare); box-shadow:0 0 0 2px var(--rare); }
+  .item-slot.epic .item-icon{ background:var(--epic); box-shadow:0 0 0 2px var(--epic); }
+  .item-name{ font-family:var(--vt); font-size:16px; color:var(--text); line-height:1.1; }
+  .item-rarity{ font-family:var(--pixel); font-size:7px; letter-spacing:0.05em; text-transform:uppercase; }
+  .item-slot.common .item-rarity{ color:var(--common); }
+  .item-slot.uncommon .item-rarity{ color:var(--uncommon); }
+  .item-slot.rare .item-rarity{ color:var(--rare); }
+  .item-slot.epic .item-rarity{ color:var(--epic); }
+
+  .inv-group-label{ font-family:var(--pixel); font-size:9px; color:var(--text-dimmer); margin:26px 0 12px; }
+  .inv-group-label:first-child{ margin-top:0; }
+
+  /* ---------- quest log / projects ---------- */
+  .quest-list{ display:flex; flex-direction:column; gap:16px; }
+  .quest-card{ padding:20px 22px; }
+  .quest-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .quest-title{ font-family:var(--pixel); font-size:12px; color:var(--text); margin:0 0 8px; }
+  .quest-status{ font-family:var(--pixel); font-size:8px; color:var(--green); border:2px solid var(--green); padding:4px 8px; white-space:nowrap; }
+  .quest-diff{ font-family:var(--vt); font-size:16px; color:var(--gold); margin:6px 0 10px; }
+  .quest-desc{ color:var(--text-dim); font-size:18px; margin:0 0 14px; }
+  .quest-rewards{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:16px; }
+  .quest-rewards span{ font-family:var(--pixel); font-size:7px; color:var(--xp); border:1px solid var(--xp); padding:4px 7px; }
+
+  /* ---------- level up / education ---------- */
+  .levelup-panel{ padding:26px 26px; text-align:center; }
+  .levelup-title{ font-family:var(--pixel); font-size:20px; color:var(--gold); margin:0 0 6px; }
+  .levelup-sub{ font-family:var(--vt); font-size:18px; color:var(--text-dim); margin:0 0 20px; }
+  .levelup-bar-wrap{ max-width:420px; margin:0 auto 18px; }
+  .school-line{ font-family:var(--vt); font-size:18px; color:var(--text); margin:0; }
+  .school-meta{ font-family:var(--pixel); font-size:9px; color:var(--text-dimmer); margin-top:8px; }
+
+  /* ---------- achievements / trophies ---------- */
+  .trophy-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:16px; }
+  .trophy-card{
+    padding:20px 18px;
+    text-align:center;
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+  }
+  .trophy-icon{ font-size:30px; filter:drop-shadow(2px 2px 0 var(--border-dark)); }
+  .trophy-name{ font-family:var(--vt); font-size:17px; color:var(--text); line-height:1.2; }
+  .trophy-issuer{ font-family:var(--pixel); font-size:8px; color:var(--xp); }
+  .trophy-year{ font-family:var(--pixel); font-size:7px; color:var(--green); margin-top:4px; }
+
+  /* ---------- contact / co-op ---------- */
+  .coop-grid{ display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  @media (max-width:760px){ .coop-grid{ grid-template-columns:1fr; } }
+  .id-card{ padding:20px 22px; }
+  .id-row{ display:flex; justify-content:space-between; gap:10px; font-size:18px; padding:8px 0; border-bottom:2px dashed var(--border); }
+  .id-row:last-child{ border-bottom:none; }
+  .id-key{ font-family:var(--pixel); font-size:8px; color:var(--text-dimmer); align-self:center; }
+  .id-val{ color:var(--text); text-align:right; word-break:break-all; }
+
+  .coop-form{ padding:20px 22px; display:flex; flex-direction:column; gap:12px; }
+  .coop-form label{ font-family:var(--pixel); font-size:8px; color:var(--text-dimmer); }
+  .coop-form input, .coop-form textarea{
+    background:var(--bg-2); border:2px solid var(--border-dark); box-shadow:0 0 0 2px var(--border);
+    color:var(--text); font-family:var(--vt); font-size:18px; padding:9px 10px; resize:vertical;
+  }
+  .coop-form input:focus, .coop-form textarea:focus{ outline:2px solid var(--gold); outline-offset:2px; }
+  .coop-form button{ align-self:flex-start; margin-top:4px; }
+
+  footer{
+    flex-shrink:0;
+    text-align:center; padding:10px 16px;
+    font-family:var(--pixel); font-size:8px; color:var(--text-dimmer);
+    background:var(--bg-2);
+    border-top:4px solid var(--border-dark);
+  }
+
+  a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible{
+    outline:2px solid var(--gold); outline-offset:2px;
+  }
+
+  @keyframes floaty{ 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-6px);} }
+  .floaty{ animation:floaty 2.4s ease-in-out infinite; }
+</style>
+</head>
+<body>
+
+<!-- HUD -->
+<div class="hud">
+  <div class="hud-avatar" id="hudAvatar"></div>
+  <div>
+    <div class="hud-name">DINESH_G</div>
+    <div class="hud-lvl">LV.4 — IT UNDERGRAD</div>
+  </div>
+  <div class="hud-bars">
+    <div class="bar-row"><span class="bar-label">CGPA</span><div class="bar-track"><div class="bar-fill xp"></div></div></div>
+    <div class="bar-row"><span class="bar-label">GRIT</span><div class="bar-track"><div class="bar-fill hp"></div></div></div>
+  </div>
+  <div class="hud-coins"><span class="coin-icon"></span> 200+ SOLVED</div>
+</div>
+
+<!-- World map nav (page selector) -->
+<nav class="worldmap">
+  <div class="map-track" id="mapTrack">
+    <button class="map-node active" data-index="0">
+      <div class="node-circle">①</div><span class="node-label">PLAYER</span>
+    </button>
+    <div class="map-connector"></div>
+    <button class="map-node" data-index="1">
+      <div class="node-circle">②</div><span class="node-label">INVENTORY</span>
+    </button>
+    <div class="map-connector"></div>
+    <button class="map-node" data-index="2">
+      <div class="node-circle">③</div><span class="node-label">QUESTS</span>
+    </button>
+    <div class="map-connector"></div>
+    <button class="map-node" data-index="3">
+      <div class="node-circle">④</div><span class="node-label">LEVEL UP</span>
+    </button>
+    <div class="map-connector"></div>
+    <button class="map-node" data-index="4">
+      <div class="node-circle">⑤</div><span class="node-label">TROPHIES</span>
+    </button>
+    <div class="map-connector"></div>
+    <button class="map-node" data-index="5">
+      <div class="node-circle">⑥</div><span class="node-label">CO-OP</span>
+    </button>
+  </div>
+</nav>
+
+<!-- Sliding pages -->
+<div class="viewport">
+  <button class="pixel-btn nav-arrow left" id="prevBtn" aria-label="Previous page">◀</button>
+  <button class="pixel-btn nav-arrow right" id="nextBtn" aria-label="Next page">▶</button>
+
+  <div class="track" id="track">
+
+    <!-- PAGE 1: ABOUT -->
+    <div class="page" id="page-about">
+      <div class="page-inner">
+        <span class="stage-label">STAGE 1</span>
+        <h2 class="section-title">Player Profile</h2>
+        <div class="pixel-panel panel-pad">
+          <div class="profile-grid">
+            <div>
+              <div class="avatar-big floaty" id="bigAvatar"></div>
+              <div class="avatar-tag">DINESH_G</div>
+            </div>
+            <div>
+              <p class="bio-text">
+                <span class="hi">Fourth-year IT undergrad</span> at Mepco Schlenk Engineering College who likes taking systems apart to see how they <span class="kw">schedule</span>, <span class="kw">serve</span>, and <span class="kw">scale</span>. Currently grinding backend logic, databases, and the occasional computer-vision side quest — 200+ LeetCode problems cleared and counting. Looking for a guild to join for internships or entry-level roles.
+              </p>
+              <div class="stat-list">
+                <div class="stat-line"><span class="stat-name">BACKEND</span><div class="stat-bar"><div class="stat-fill" style="width:82%"></div></div><span class="stat-val">82</span></div>
+                <div class="stat-line"><span class="stat-name">WEB DEV</span><div class="stat-bar"><div class="stat-fill" style="width:70%; background:var(--xp);"></div></div><span class="stat-val">70</span></div>
+                <div class="stat-line"><span class="stat-name">PROBLEM SOLVING</span><div class="stat-bar"><div class="stat-fill" style="width:88%; background:var(--gold);"></div></div><span class="stat-val">88</span></div>
+                <div class="stat-line"><span class="stat-name">TEAMWORK</span><div class="stat-bar"><div class="stat-fill" style="width:75%; background:var(--purple);"></div></div><span class="stat-val">75</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:22px; display:flex; gap:14px; flex-wrap:wrap;">
+          <a class="pixel-btn gold" href="Dinesh_G_Resume.pdf" download>💾 SAVE GAME (RESUME)</a>
+          <button class="pixel-btn jump-btn" data-index="2">▶ VIEW QUESTS</button>
+          <button class="pixel-btn jump-btn" data-index="5">✉ CO-OP INVITE</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 2: SKILLS -->
+    <div class="page" id="page-skills">
+      <div class="page-inner">
+        <span class="stage-label">STAGE 2</span>
+        <h2 class="section-title">Inventory</h2>
+
+        <div class="inv-group-label">— LANGUAGES —</div>
+        <div class="inventory-grid">
+          <div class="item-slot common"><div class="item-icon">C</div><div class="item-name">C</div><div class="item-rarity">Common</div></div>
+          <div class="item-slot uncommon"><div class="item-icon">C++</div><div class="item-name">C++</div><div class="item-rarity">Uncommon</div></div>
+          <div class="item-slot rare"><div class="item-icon">JV</div><div class="item-name">Java</div><div class="item-rarity">Rare</div></div>
+        </div>
+
+        <div class="inv-group-label">— WEB —</div>
+        <div class="inventory-grid">
+          <div class="item-slot common"><div class="item-icon">H5</div><div class="item-name">HTML</div><div class="item-rarity">Common</div></div>
+          <div class="item-slot rare"><div class="item-icon">JS</div><div class="item-name">JavaScript</div><div class="item-rarity">Rare</div></div>
+          <div class="item-slot epic"><div class="item-icon">⚛</div><div class="item-name">React</div><div class="item-rarity">Epic</div></div>
+        </div>
+
+        <div class="inv-group-label">— DATABASE —</div>
+        <div class="inventory-grid">
+          <div class="item-slot uncommon"><div class="item-icon">DB</div><div class="item-name">SQL</div><div class="item-rarity">Uncommon</div></div>
+          <div class="item-slot rare"><div class="item-icon">MG</div><div class="item-name">MongoDB</div><div class="item-rarity">Rare</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 3: PROJECTS -->
+    <div class="page" id="page-projects">
+      <div class="page-inner">
+        <span class="stage-label">STAGE 3</span>
+        <h2 class="section-title">Quest Log</h2>
+        <div class="quest-list">
+
+          <div class="pixel-panel quest-card">
+            <div class="quest-top">
+              <h3 class="quest-title">QUEST: Pharmacy Management System</h3>
+              <span class="quest-status">✓ COMPLETED</span>
+            </div>
+            <div class="quest-diff">DIFFICULTY: ★★☆</div>
+            <p class="quest-desc">Built a desktop app to manage pharmacy inventory, billing, and stock records using NetBeans.</p>
+            <div class="quest-rewards"><span>JAVA</span><span>NETBEANS</span><span>SQL</span></div>
+            <a class="pixel-btn" href="https://github.com/Dinesh-G-08/Pharmacy-Management-System.git" target="_blank" rel="noopener">VIEW LOOT (GITHUB) ↗</a>
+          </div>
+
+          <div class="pixel-panel quest-card">
+            <div class="quest-top">
+              <h3 class="quest-title">QUEST: Microservice</h3>
+              <span class="quest-status">✓ COMPLETED</span>
+            </div>
+            <div class="quest-diff">DIFFICULTY: ★★★</div>
+            <p class="quest-desc">Explored a modular, independently-deployable backend built around clean API boundaries.</p>
+            <div class="quest-rewards"><span>BACKEND</span><span>APIS</span><span>ARCHITECTURE</span></div>
+            <a class="pixel-btn" href="https://github.com/Dinesh-G-08/Microservice-.git" target="_blank" rel="noopener">VIEW LOOT (GITHUB) ↗</a>
+          </div>
+
+          <div class="pixel-panel quest-card">
+            <div class="quest-top">
+              <h3 class="quest-title">QUEST: Leaf Disease Detection (YOLOv5)</h3>
+              <span class="quest-status">✓ COMPLETED</span>
+            </div>
+            <div class="quest-diff">DIFFICULTY: ★★★</div>
+            <p class="quest-desc">Trained a computer-vision model to detect and classify crop leaf diseases from images.</p>
+            <div class="quest-rewards"><span>PYTHON</span><span>YOLOV5</span><span>COMPUTER VISION</span></div>
+            <a class="pixel-btn" href="https://github.com/Dinesh-G-08/leafscan-project.git" target="_blank" rel="noopener">VIEW LOOT (GITHUB) ↗</a>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 4: EDUCATION -->
+    <div class="page" id="page-education">
+      <div class="page-inner">
+        <span class="stage-label">STAGE 4</span>
+        <h2 class="section-title">Level Up</h2>
+        <div class="pixel-panel levelup-panel">
+          <div class="levelup-title">★ LEVEL 4 REACHED ★</div>
+          <p class="levelup-sub">B.Tech, Information Technology</p>
+          <div class="levelup-bar-wrap">
+            <div class="bar-track" style="height:20px;"><div class="bar-fill xp" style="width:73.6%;"></div></div>
+          </div>
+          <p class="school-line">Mepco Schlenk Engineering College, Sivakasi</p>
+          <p class="school-meta">2023 — 2027 · CGPA 7.36 · NEXT LEVEL: GRADUATE</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 5: ACHIEVEMENTS -->
+    <div class="page" id="page-achievements">
+      <div class="page-inner">
+        <span class="stage-label">STAGE 5</span>
+        <h2 class="section-title">Trophies Unlocked</h2>
+        <div class="trophy-grid">
+          <div class="pixel-panel trophy-card">
+            <div class="trophy-icon">🏆</div>
+            <div class="trophy-name">Data Analytics Using Python</div>
+            <div class="trophy-issuer">NPTEL</div>
+            <div class="trophy-year">UNLOCKED · 2024</div>
+          </div>
+          <div class="pixel-panel trophy-card">
+            <div class="trophy-icon">🏆</div>
+            <div class="trophy-name">Associate in IT Foundation Skills (Java)</div>
+            <div class="trophy-issuer">Infosys Springboard</div>
+            <div class="trophy-year">UNLOCKED · 2025</div>
+          </div>
+          <div class="pixel-panel trophy-card">
+            <div class="trophy-icon">🏆</div>
+            <div class="trophy-name">Software Testing</div>
+            <div class="trophy-issuer">NPTEL</div>
+            <div class="trophy-year">UNLOCKED · 2025</div>
+          </div>
+          <div class="pixel-panel trophy-card">
+            <div class="trophy-icon">🏆</div>
+            <div class="trophy-name">Affective Computing</div>
+            <div class="trophy-issuer">NPTEL</div>
+            <div class="trophy-year">UNLOCKED · 2026</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 6: CONTACT -->
+    <div class="page" id="page-contact">
+      <div class="page-inner">
+        <span class="stage-label">STAGE 6</span>
+        <h2 class="section-title">Co-op Invite</h2>
+        <div class="coop-grid">
+          <div class="pixel-panel id-card">
+            <div class="id-row"><span class="id-key">EMAIL</span><span class="id-val"><a href="mailto:dd1125072@gmail.com">dd1125072@gmail.com</a></span></div>
+            <div class="id-row"><span class="id-key">PHONE</span><span class="id-val">+91 93424 49806</span></div>
+            <div class="id-row"><span class="id-key">GITHUB</span><span class="id-val"><a href="https://github.com/Dinesh-G-08" target="_blank" rel="noopener">Dinesh-G-08</a></span></div>
+            <div class="id-row"><span class="id-key">LINKEDIN</span><span class="id-val" style="color:var(--text-dimmer);">coming soon</span></div>
+            <div class="id-row"><span class="id-key">STATUS</span><span class="id-val" style="color:var(--green);">● ONLINE — OPEN TO ROLES</span></div>
+          </div>
+          <form class="pixel-panel coop-form" id="coopForm">
+            <label for="cf-name">PLAYER NAME</label>
+            <input id="cf-name" name="name" type="text" placeholder="Your name" required>
+            <label for="cf-email">RETURN ADDRESS</label>
+            <input id="cf-email" name="email" type="email" placeholder="you@example.com" required>
+            <label for="cf-msg">MESSAGE</label>
+            <textarea id="cf-msg" name="message" rows="4" placeholder="Say hello..." required></textarea>
+            <button type="submit" class="pixel-btn gold">SEND INVITE ▶</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer id="footerHint">© 2026 DINESH_G · USE ◀ ▶ OR ARROW KEYS · SWIPE ON MOBILE</footer>
+
+<script>
+  var TOTAL_PAGES = 6;
+  var currentIndex = 0;
+  var track = document.getElementById('track');
+  var mapNodes = document.querySelectorAll('.map-node');
+  var prevBtn = document.getElementById('prevBtn');
+  var nextBtn = document.getElementById('nextBtn');
+
+  function goTo(index){
+    index = Math.max(0, Math.min(TOTAL_PAGES - 1, index));
+    currentIndex = index;
+    track.style.transform = 'translateX(-' + (index * (100 / TOTAL_PAGES)) + '%)';
+    mapNodes.forEach(function(node, i){
+      node.classList.toggle('active', i === index);
+    });
+    prevBtn.disabled = index === 0;
+    nextBtn.disabled = index === TOTAL_PAGES - 1;
+  }
+
+  // World map node clicks
+  mapNodes.forEach(function(node){
+    node.addEventListener('click', function(){
+      goTo(parseInt(node.dataset.index, 10));
+    });
+  });
+
+  // In-page jump buttons ("VIEW QUESTS", "CO-OP INVITE")
+  document.querySelectorAll('.jump-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      goTo(parseInt(btn.dataset.index, 10));
+    });
+  });
+
+  // Arrow buttons
+  prevBtn.addEventListener('click', function(){ goTo(currentIndex - 1); });
+  nextBtn.addEventListener('click', function(){ goTo(currentIndex + 1); });
+
+  // Keyboard navigation
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'ArrowRight'){ goTo(currentIndex + 1); }
+    if(e.key === 'ArrowLeft'){ goTo(currentIndex - 1); }
+  });
+
+  // Touch swipe navigation
+  (function(){
+    var startX = 0, startY = 0, tracking = false;
+    var viewport = document.querySelector('.viewport');
+    viewport.addEventListener('touchstart', function(e){
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      tracking = true;
+    }, { passive:true });
+    viewport.addEventListener('touchend', function(e){
+      if(!tracking) return;
+      tracking = false;
+      var dx = e.changedTouches[0].clientX - startX;
+      var dy = e.changedTouches[0].clientY - startY;
+      if(Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)){
+        if(dx < 0){ goTo(currentIndex + 1); } else { goTo(currentIndex - 1); }
+      }
+    }, { passive:true });
+  })();
+
+  // Generate a simple blocky pixel-avatar (8x8 grid) — generic, not tied to any franchise
+  (function(){
+    var pattern = [
+      0,0,1,1,1,1,0,0,
+      0,1,2,2,2,2,1,0,
+      1,2,3,2,2,3,2,1,
+      1,2,2,2,2,2,2,1,
+      1,2,4,2,2,4,2,1,
+      1,2,2,4,4,2,2,1,
+      0,1,2,2,2,2,1,0,
+      0,0,1,1,1,1,0,0
+    ];
+    var colors = { 0:'transparent', 1:'#0c0c16', 2:'#38bdf8', 3:'#f2f2f7', 4:'#12121e' };
+    function buildAvatar(el){
+      pattern.forEach(function(v){
+        var d = document.createElement('div');
+        d.style.background = colors[v];
+        el.appendChild(d);
+      });
+    }
+    buildAvatar(document.getElementById('hudAvatar'));
+    buildAvatar(document.getElementById('bigAvatar'));
+  })();
+
+  // Button press feedback
+  document.querySelectorAll('.pixel-btn').forEach(function(btn){
+    btn.addEventListener('mousedown', function(){ btn.classList.add('press'); });
+    btn.addEventListener('mouseup', function(){ btn.classList.remove('press'); });
+    btn.addEventListener('mouseleave', function(){ btn.classList.remove('press'); });
+  });
+
+  // Contact form -> mailto
+  document.getElementById('coopForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var name = document.getElementById('cf-name').value;
+    var email = document.getElementById('cf-email').value;
+    var msg = document.getElementById('cf-msg').value;
+    var subject = encodeURIComponent('Co-op invite from ' + name);
+    var body = encodeURIComponent(msg + '\n\n— ' + name + ' (' + email + ')');
+    window.location.href = 'mailto:dd1125072@gmail.com?subject=' + subject + '&body=' + body;
+  });
+
+  // Init
+  goTo(0);
+</script>
+
+</body>
+</html>

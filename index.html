@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dinesh G — Portfolio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b0f14;
+    --surface:#0f151c;
+    --surface-2:#141c25;
+    --border:#20303e;
+    --border-soft:#182430;
+    --text:#e6edf3;
+    --text-dim:#7d8ea1;
+    --text-dimmer:#4d5c6c;
+    --accent:#5eead4;
+    --accent-soft:#5eead422;
+    --accent-2:#f5a623;
+    --accent-2-soft:#f5a62322;
+    --red:#ff5f56;
+    --yellow:#ffbd2e;
+    --green:#27c93f;
+    --mono:'JetBrains Mono', monospace;
+    --sans:'Inter', sans-serif;
+    --radius:8px;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;}
+  }
+
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    line-height:1.6;
+    background-image:
+      radial-gradient(circle at 15% 8%, rgba(94,234,212,0.05), transparent 40%),
+      radial-gradient(circle at 85% 25%, rgba(245,166,35,0.04), transparent 40%);
+  }
+
+  a{color:var(--accent);}
+
+  ::selection{ background:var(--accent-soft); color:var(--accent); }
+
+  /* ---------- Layout shell ---------- */
+  .app{
+    display:grid;
+    grid-template-columns:230px 1fr;
+    min-height:100vh;
+  }
+
+  /* ---------- Sidebar / file tree ---------- */
+  .sidebar{
+    position:sticky;
+    top:0;
+    height:100vh;
+    border-right:1px solid var(--border-soft);
+    background:var(--surface);
+    padding:20px 0;
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+  }
+  .sidebar-brand{
+    font-family:var(--mono);
+    font-size:13px;
+    color:var(--text-dim);
+    padding:0 18px 16px;
+    border-bottom:1px solid var(--border-soft);
+    margin-bottom:10px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .sidebar-brand .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;}
+
+  .tree-label{
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:0.08em;
+    color:var(--text-dimmer);
+    padding:6px 18px;
+    text-transform:uppercase;
+  }
+
+  .file-link{
+    font-family:var(--mono);
+    font-size:13.5px;
+    color:var(--text-dim);
+    text-decoration:none;
+    padding:7px 18px 7px 30px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    border-left:2px solid transparent;
+    cursor:pointer;
+    transition:color .15s ease, background .15s ease, border-color .15s ease;
+  }
+  .file-link:hover{ color:var(--text); background:var(--surface-2); }
+  .file-link.active{
+    color:var(--accent);
+    background:var(--accent-soft);
+    border-left-color:var(--accent);
+  }
+  .file-link .ext{ color:var(--text-dimmer); }
+  .file-link.active .ext{ color:var(--accent); opacity:0.7; }
+
+  .sidebar-footer{
+    margin-top:auto;
+    padding:14px 18px;
+    border-top:1px solid var(--border-soft);
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--text-dimmer);
+  }
+
+  /* Mobile nav toggle */
+  .mobile-bar{ display:none; }
+
+  /* ---------- Main / editor ---------- */
+  .editor{ min-width:0; }
+
+  .tabbar{
+    display:flex;
+    border-bottom:1px solid var(--border-soft);
+    background:var(--surface);
+    overflow-x:auto;
+    position:sticky;
+    top:0;
+    z-index:10;
+    backdrop-filter:blur(6px);
+  }
+  .tab{
+    font-family:var(--mono);
+    font-size:12.5px;
+    color:var(--text-dim);
+    padding:11px 18px;
+    border-right:1px solid var(--border-soft);
+    white-space:nowrap;
+    text-decoration:none;
+    display:flex;
+    align-items:center;
+    gap:7px;
+    transition:color .15s ease, background .15s ease;
+  }
+  .tab:hover{ color:var(--text); }
+  .tab.active{ color:var(--accent); background:var(--surface-2); }
+  .tab .dot-close{ opacity:0.35; font-size:11px; }
+
+  .content{ padding:0 0 80px; }
+
+  section{ padding:56px clamp(20px, 5vw, 64px) 24px; scroll-margin-top:52px; }
+  section + section{ border-top:1px solid var(--border-soft); }
+
+  .section-head{
+    display:flex;
+    align-items:baseline;
+    gap:12px;
+    margin-bottom:28px;
+  }
+  .section-head .comment{
+    font-family:var(--mono);
+    color:var(--text-dimmer);
+    font-size:13px;
+  }
+  .section-head h2{
+    font-family:var(--mono);
+    font-size:clamp(20px, 2.6vw, 26px);
+    margin:0;
+    color:var(--text);
+    font-weight:600;
+  }
+  .section-head h2 .accent{ color:var(--accent); }
+
+  .code-block{
+    display:flex;
+    background:var(--surface);
+    border:1px solid var(--border-soft);
+    border-radius:var(--radius);
+    overflow:hidden;
+  }
+  .gutter{
+    font-family:var(--mono);
+    font-size:12.5px;
+    color:var(--text-dimmer);
+    padding:18px 12px;
+    text-align:right;
+    user-select:none;
+    border-right:1px solid var(--border-soft);
+    background:var(--surface);
+    line-height:1.9;
+    flex-shrink:0;
+  }
+  .code-inner{ padding:18px 22px; flex:1; min-width:0; }
+
+  /* ---------- Hero / terminal ---------- */
+  .hero-wrap{ padding:64px clamp(20px, 5vw, 64px) 40px; }
+  .terminal{
+    background:var(--surface);
+    border:1px solid var(--border-soft);
+    border-radius:10px;
+    overflow:hidden;
+    box-shadow:0 20px 60px -20px rgba(0,0,0,0.5);
+  }
+  .term-chrome{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:11px 14px;
+    border-bottom:1px solid var(--border-soft);
+    background:var(--surface-2);
+  }
+  .term-chrome .tl-dot{ width:11px; height:11px; border-radius:50%; }
+  .term-chrome .title{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--text-dimmer);
+    margin:0 auto;
+  }
+  .term-body{ padding:26px clamp(18px,4vw,34px) 32px; font-family:var(--mono); }
+  .term-line{ color:var(--text-dim); font-size:14px; margin-bottom:6px; }
+  .term-line .prompt{ color:var(--accent-2); }
+  .term-result{ margin:0 0 4px; }
+  .term-key{ color:var(--text-dim); }
+  .hero-name{
+    font-size:clamp(30px, 6vw, 52px);
+    font-weight:700;
+    color:var(--text);
+    margin:14px 0 2px;
+    letter-spacing:-0.01em;
+  }
+  .hero-role{
+    font-size:clamp(15px, 2vw, 18px);
+    color:var(--accent);
+    margin:0 0 18px;
+  }
+  .cursor{
+    display:inline-block;
+    width:9px; height:1.1em;
+    background:var(--accent);
+    margin-left:2px;
+    vertical-align:text-bottom;
+    animation:blink 1s step-end infinite;
+  }
+  @keyframes blink{ 50%{ opacity:0; } }
+
+  .hero-tags{ display:flex; flex-wrap:wrap; gap:8px; margin-top:18px; }
+  .hero-tags span{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--text-dim);
+    border:1px solid var(--border);
+    border-radius:20px;
+    padding:5px 12px;
+  }
+
+  .hero-ctas{ display:flex; gap:12px; margin-top:26px; flex-wrap:wrap; }
+  .btn{
+    font-family:var(--mono);
+    font-size:13px;
+    text-decoration:none;
+    padding:10px 18px;
+    border-radius:6px;
+    border:1px solid var(--border);
+    color:var(--text);
+    transition:all .15s ease;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+  }
+  .btn:hover{ border-color:var(--accent); color:var(--accent); }
+  .btn.primary{ background:var(--accent); color:#0b0f14; border-color:var(--accent); font-weight:600;}
+  .btn.primary:hover{ background:var(--accent); opacity:0.88; color:#0b0f14; }
+
+  /* ---------- About ---------- */
+  .about-text{ color:var(--text-dim); font-size:15.5px; max-width:60ch; }
+  .about-text .kw{ color:var(--accent-2); font-family:var(--mono); }
+  .about-text strong{ color:var(--text); font-weight:600; }
+
+  .stat-row{ display:flex; gap:28px; margin-top:28px; flex-wrap:wrap; }
+  .stat{ font-family:var(--mono); }
+  .stat .num{ font-size:24px; color:var(--accent); font-weight:600; display:block; }
+  .stat .label{ font-size:11.5px; color:var(--text-dimmer); text-transform:uppercase; letter-spacing:0.06em; }
+
+  /* ---------- Skills ---------- */
+  .skill-groups{ display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:18px; }
+  .skill-group{
+    background:var(--surface);
+    border:1px solid var(--border-soft);
+    border-radius:var(--radius);
+    padding:18px 20px;
+  }
+  .skill-group h3{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--text-dimmer);
+    text-transform:uppercase;
+    letter-spacing:0.07em;
+    margin:0 0 12px;
+  }
+  .skill-chips{ display:flex; flex-wrap:wrap; gap:8px; }
+  .chip{
+    font-family:var(--mono);
+    font-size:13px;
+    color:var(--text);
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:5px;
+    padding:6px 11px;
+  }
+
+  /* ---------- Projects ---------- */
+  .projects-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(280px,1fr)); gap:18px; }
+  .project-card{
+    background:var(--surface);
+    border:1px solid var(--border-soft);
+    border-radius:var(--radius);
+    padding:20px 22px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    transition:border-color .15s ease, transform .15s ease;
+  }
+  .project-card:hover{ border-color:var(--accent); transform:translateY(-2px); }
+  .project-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+  .project-top h3{ margin:0; font-size:16px; color:var(--text); font-family:var(--mono); }
+  .project-top a{
+    color:var(--text-dimmer);
+    text-decoration:none;
+    font-family:var(--mono);
+    font-size:12px;
+    border:1px solid var(--border);
+    border-radius:5px;
+    padding:4px 9px;
+    white-space:nowrap;
+    transition:all .15s ease;
+  }
+  .project-top a:hover{ color:var(--accent); border-color:var(--accent); }
+  .project-card p{ margin:0; color:var(--text-dim); font-size:14px; }
+  .project-tags{ display:flex; flex-wrap:wrap; gap:6px; margin-top:auto; }
+  .project-tags span{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--accent-2);
+    background:var(--accent-2-soft);
+    border-radius:4px;
+    padding:3px 8px;
+  }
+
+  /* ---------- Education ---------- */
+  .edu-item{ display:flex; gap:18px; }
+  .edu-item + .edu-item{ margin-top:22px; }
+  .edu-marker{ display:flex; flex-direction:column; align-items:center; }
+  .edu-marker .node{ width:9px; height:9px; border-radius:50%; background:var(--accent); margin-top:6px; }
+  .edu-marker .line{ width:1px; flex:1; background:var(--border); margin-top:4px; }
+  .edu-body h3{ margin:0 0 4px; font-size:16px; color:var(--text); }
+  .edu-body .meta{ font-family:var(--mono); font-size:12.5px; color:var(--text-dimmer); margin-bottom:6px; }
+  .edu-body p{ margin:0; color:var(--text-dim); font-size:14px; }
+  .badge{
+    display:inline-block;
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--accent);
+    background:var(--accent-soft);
+    border-radius:4px;
+    padding:2px 8px;
+    margin-left:8px;
+  }
+
+  /* ---------- Certifications ---------- */
+  .cert-list{ display:flex; flex-direction:column; gap:4px; }
+  .cert-item{
+    display:flex;
+    align-items:baseline;
+    gap:12px;
+    padding:10px 0;
+    border-bottom:1px solid var(--border-soft);
+    flex-wrap:wrap;
+  }
+  .cert-item:last-child{ border-bottom:none; }
+  .cert-item::before{
+    content:"✓";
+    color:var(--accent);
+    font-family:var(--mono);
+    font-size:13px;
+    flex-shrink:0;
+  }
+  .cert-name{ color:var(--text); font-size:14.5px; font-weight:500; }
+  .cert-issuer{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--text-dimmer);
+    margin-left:auto;
+  }
+  .cert-year{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--accent-2);
+    min-width:40px;
+    text-align:right;
+  }
+
+  /* ---------- Contact ---------- */
+  .contact-wrap{ display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+  .contact-cmd{
+    background:var(--surface);
+    border:1px solid var(--border-soft);
+    border-radius:var(--radius);
+    padding:20px 22px;
+    font-family:var(--mono);
+    font-size:13.5px;
+  }
+  .contact-cmd .line{ margin-bottom:10px; color:var(--text-dim); }
+  .contact-cmd .flag{ color:var(--accent-2); }
+  .contact-cmd a{ color:var(--accent); text-decoration:none; }
+  .contact-cmd a:hover{ text-decoration:underline; }
+
+  .contact-form{
+    background:var(--surface);
+    border:1px solid var(--border-soft);
+    border-radius:var(--radius);
+    padding:20px 22px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .contact-form label{
+    font-family:var(--mono);
+    font-size:11.5px;
+    color:var(--text-dimmer);
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+  }
+  .contact-form input, .contact-form textarea{
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:6px;
+    color:var(--text);
+    padding:10px 12px;
+    font-family:var(--sans);
+    font-size:14px;
+    resize:vertical;
+  }
+  .contact-form input:focus, .contact-form textarea:focus{
+    outline:none; border-color:var(--accent);
+  }
+  .contact-form button{
+    align-self:flex-start;
+    margin-top:6px;
+    cursor:pointer;
+  }
+
+  @media (max-width: 860px){
+    .contact-wrap{ grid-template-columns:1fr; }
+  }
+
+  /* ---------- Status bar ---------- */
+  .statusbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:var(--accent);
+    color:#0b0f14;
+    font-family:var(--mono);
+    font-size:11.5px;
+    padding:6px 18px;
+  }
+  .statusbar .right{ display:flex; gap:16px; }
+
+  /* ---------- Focus visibility ---------- */
+  a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:2px;
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 780px){
+    .app{ grid-template-columns:1fr; }
+    .sidebar{ display:none; }
+    .mobile-bar{
+      display:flex;
+      position:sticky; top:0; z-index:20;
+      overflow-x:auto;
+      background:var(--surface);
+      border-bottom:1px solid var(--border-soft);
+    }
+    .mobile-bar a{
+      font-family:var(--mono);
+      font-size:12.5px;
+      color:var(--text-dim);
+      padding:12px 16px;
+      white-space:nowrap;
+      text-decoration:none;
+      border-bottom:2px solid transparent;
+    }
+    .mobile-bar a.active{ color:var(--accent); border-color:var(--accent); }
+    .tabbar{ display:none; }
+    .contact-wrap{ grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="mobile-bar" id="mobileBar">
+  <a href="#about" data-target="about">about.md</a>
+  <a href="#skills" data-target="skills">skills.json</a>
+  <a href="#projects" data-target="projects">projects/</a>
+  <a href="#education" data-target="education">education.md</a>
+  <a href="#certifications" data-target="certifications">certifications.log</a>
+  <a href="#contact" data-target="contact">contact.sh</a>
+</div>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-brand"><span class="dot"></span> dinesh-portfolio</div>
+    <div class="tree-label">/ src</div>
+    <a class="file-link" href="#about" data-target="about"><span>about</span><span class="ext">.md</span></a>
+    <a class="file-link" href="#skills" data-target="skills"><span>skills</span><span class="ext">.json</span></a>
+    <a class="file-link" href="#projects" data-target="projects"><span>projects</span><span class="ext">/</span></a>
+    <a class="file-link" href="#education" data-target="education"><span>education</span><span class="ext">.md</span></a>
+    <a class="file-link" href="#certifications" data-target="certifications"><span>certifications</span><span class="ext">.log</span></a>
+    <a class="file-link" href="#contact" data-target="contact"><span>contact</span><span class="ext">.sh</span></a>
+    <div class="sidebar-footer">
+      $ status<br>
+      → 4th yr · IT undergrad<br>
+      → open to opportunities
+    </div>
+  </aside>
+
+  <main class="editor">
+    <nav class="tabbar" id="tabbar">
+      <a class="tab" href="#about" data-target="about">about.md</a>
+      <a class="tab" href="#skills" data-target="skills">skills.json</a>
+      <a class="tab" href="#projects" data-target="projects">projects/</a>
+      <a class="tab" href="#education" data-target="education">education.md</a>
+      <a class="tab" href="#certifications" data-target="certifications">certifications.log</a>
+      <a class="tab" href="#contact" data-target="contact">contact.sh</a>
+    </nav>
+
+    <div class="content">
+
+      <!-- HERO -->
+      <div class="hero-wrap">
+        <div class="terminal">
+          <div class="term-chrome">
+            <span class="tl-dot" style="background:var(--red)"></span>
+            <span class="tl-dot" style="background:var(--yellow)"></span>
+            <span class="tl-dot" style="background:var(--green)"></span>
+            <p class="title">zsh — dinesh@mepco — 80x24</p>
+          </div>
+          <div class="term-body">
+            <p class="term-line"><span class="prompt">➜</span> whoami</p>
+            <h1 class="hero-name" id="typedName"></h1>
+            <p class="hero-role">Aspiring Software Developer · IT Undergraduate</p>
+            <p class="term-line"><span class="prompt">➜</span> cat status.txt</p>
+            <p class="term-result" style="color:var(--text-dim); font-size:14px;">Final-year student building backend systems, scheduling logic, and the occasional computer-vision model.<span class="cursor"></span></p>
+            <div class="hero-tags">
+              <span>Java</span><span>C / C++</span><span>React</span><span>MongoDB</span><span>SQL</span>
+            </div>
+            <div class="hero-ctas">
+              <a class="btn primary" href="Dinesh_G_Resume.pdf" download>↓ Download Resume</a>
+              <a class="btn" href="#projects">View Projects</a>
+              <a class="btn" href="#contact">Get in Touch</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ABOUT -->
+      <section id="about">
+        <div class="section-head">
+          <span class="comment">// 01</span>
+          <h2>about<span class="accent">.md</span></h2>
+        </div>
+        <div class="code-block">
+          <div class="gutter">1<br>2<br>3<br>4<br>5</div>
+          <div class="code-inner">
+            <p class="about-text">
+              I'm <strong>Dinesh</strong>, a fourth-year <span class="kw">B.Tech IT</span> student at Mepco Schlenk Engineering College who likes taking systems apart to see how they schedule, serve, and scale. Most of my time goes into <strong>backend logic</strong>, <strong>databases</strong>, and the occasional <strong>computer-vision</strong> rabbit hole.
+              <br><br>
+              I learn best by building — a pharmacy system here, a microservice there, a leaf-disease detector somewhere in between — and I've cleared <strong>200+ problems on LeetCode</strong> along the way. Currently looking for opportunities to build real things with a real team.
+            </p>
+            <div class="stat-row">
+              <div class="stat"><span class="num">2027</span><span class="label">Grad Year</span></div>
+              <div class="stat"><span class="num">200+</span><span class="label">LeetCode Solved</span></div>
+              <div class="stat"><span class="num">3</span><span class="label">Shipped Projects</span></div>
+              <div class="stat"><span class="num">7.36</span><span class="label">CGPA</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SKILLS -->
+      <section id="skills">
+        <div class="section-head">
+          <span class="comment">// 02</span>
+          <h2>skills<span class="accent">.json</span></h2>
+        </div>
+        <div class="skill-groups">
+          <div class="skill-group">
+            <h3>Languages</h3>
+            <div class="skill-chips">
+              <span class="chip">C</span><span class="chip">C++</span><span class="chip">Java</span>
+            </div>
+          </div>
+          <div class="skill-group">
+            <h3>Web</h3>
+            <div class="skill-chips">
+              <span class="chip">HTML</span><span class="chip">JavaScript</span><span class="chip">React</span>
+            </div>
+          </div>
+          <div class="skill-group">
+            <h3>Database</h3>
+            <div class="skill-chips">
+              <span class="chip">SQL / DBMS</span><span class="chip">MongoDB</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PROJECTS -->
+      <section id="projects">
+        <div class="section-head">
+          <span class="comment">// 03</span>
+          <h2>projects<span class="accent">/</span></h2>
+        </div>
+        <div class="projects-grid">
+
+          <div class="project-card">
+            <div class="project-top">
+              <h3>Pharmacy Management System</h3>
+              <a href="https://github.com/Dinesh-G-08/Pharmacy-Management-System.git" target="_blank" rel="noopener">GitHub ↗</a>
+            </div>
+            <p>Desktop application to manage pharmacy inventory, billing, and stock records, built as a NetBeans Java project.</p>
+            <div class="project-tags"><span>Java</span><span>NetBeans</span><span>SQL</span></div>
+          </div>
+
+          <div class="project-card">
+            <div class="project-top">
+              <h3>Microservice</h3>
+              <a href="https://github.com/Dinesh-G-08/Microservice-.git" target="_blank" rel="noopener">GitHub ↗</a>
+            </div>
+            <p>A microservice-based backend exploring modular, independently deployable services and clean API boundaries.</p>
+            <div class="project-tags"><span>Backend</span><span>APIs</span><span>Architecture</span></div>
+          </div>
+
+          <div class="project-card">
+            <div class="project-top">
+              <h3>Leaf Disease Detection (YOLOv5)</h3>
+              <a href="https://github.com/Dinesh-G-08/leafscan-project.git" target="_blank" rel="noopener">GitHub ↗</a>
+            </div>
+            <p>Computer-vision model that detects and classifies crop leaf diseases from images using YOLOv5 object detection.</p>
+            <div class="project-tags"><span>Python</span><span>YOLOv5</span><span>Computer Vision</span></div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- EDUCATION -->
+      <section id="education">
+        <div class="section-head">
+          <span class="comment">// 04</span>
+          <h2>education<span class="accent">.md</span></h2>
+        </div>
+        <div class="edu-item">
+          <div class="edu-marker"><div class="node"></div><div class="line"></div></div>
+          <div class="edu-body">
+            <h3>B.Tech, Information Technology <span class="badge">4th Year</span></h3>
+            <div class="meta">Mepco Schlenk Engineering College, Sivakasi · 2023 – 2027</div>
+            <p>Coursework and projects spanning backend development, databases, operating systems, and computer vision.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- CERTIFICATIONS -->
+      <section id="certifications">
+        <div class="section-head">
+          <span class="comment">// 05</span>
+          <h2>certifications<span class="accent">.log</span></h2>
+        </div>
+        <div class="code-block">
+          <div class="gutter">1<br>2<br>3<br>4</div>
+          <div class="code-inner">
+            <div class="cert-list">
+              <div class="cert-item">
+                <span class="cert-name">Data Analytics Using Python</span>
+                <span class="cert-issuer">NPTEL</span>
+                <span class="cert-year">2024</span>
+              </div>
+              <div class="cert-item">
+                <span class="cert-name">Associate in IT Foundation Skills (Java)</span>
+                <span class="cert-issuer">Infosys Springboard</span>
+                <span class="cert-year">2025</span>
+              </div>
+              <div class="cert-item">
+                <span class="cert-name">Software Testing</span>
+                <span class="cert-issuer">NPTEL</span>
+                <span class="cert-year">2025</span>
+              </div>
+              <div class="cert-item">
+                <span class="cert-name">Affective Computing</span>
+                <span class="cert-issuer">NPTEL</span>
+                <span class="cert-year">2026</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CONTACT -->s
+      <section id="contact">
+        <div class="section-head">
+          <span class="comment">// 06</span>
+          <h2>contact<span class="accent">.sh</span></h2>
+        </div>
+        <div class="contact-wrap">
+          <div class="contact-cmd">
+            <p class="line"><span class="flag">--email</span> <a href="mailto:dd1125072@gmail.com">dd1125072@gmail.com</a></p>
+            <p class="line"><span class="flag">--phone</span> +91 93424 49806</p>
+            <p class="line"><span class="flag">--github</span> <a href="https://github.com/Dinesh-G-08" target="_blank" rel="noopener">github.com/Dinesh-G-08</a></p>
+            <p class="line"><span class="flag">--linkedin</span> <a href="https://www.linkedin.com/in/dinesh-g-742700421/" target="_blank" rel="noopener">linkedin.com/in/dinesh-g-742700421/</a></p>
+            <p class="line" style="margin-top:16px; color:var(--text-dimmer);">$ status: open to internships & entry-level roles_<span class="cursor"></span></p>
+          </div>
+          <form class="contact-form" id="contactForm">
+            <label for="cf-name">Name</label>
+            <input id="cf-name" name="name" type="text" placeholder="Your name" required>
+            <label for="cf-email">Email</label>
+            <input id="cf-email" name="email" type="email" placeholder="you@example.com" required>
+            <label for="cf-msg">Message</label>
+            <textarea id="cf-msg" name="message" rows="4" placeholder="Say hello..." required></textarea>
+            <button type="submit" class="btn primary">Send Message</button>
+          </form>
+        </div>
+      </section>
+
+    </div>
+
+    <div class="statusbar">
+      <span>dinesh-g / portfolio</span>
+      <span class="right">
+        <span>UTF-8</span>
+        <span>© 2026</span>
+      </span>
+    </div>
+  </main>
+</div>
+
+<script>
+  // Typing effect for hero name
+  (function(){
+    var el = document.getElementById('typedName');
+    var text = 'Dinesh G';
+    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(reduced){ el.textContent = text; return; }
+    var i = 0;
+    function tick(){
+      if(i <= text.length){
+        el.textContent = text.slice(0, i);
+        i++;
+        setTimeout(tick, 90);
+      }
+    }
+    tick();
+  })();
+
+  // Active nav highlighting
+  (function(){
+    var sections = document.querySelectorAll('section[id]');
+    var navLinks = document.querySelectorAll('.file-link, .tab, .mobile-bar a');
+    function setActive(id){
+      navLinks.forEach(function(link){
+        link.classList.toggle('active', link.dataset.target === id);
+      });
+    }
+    var observer = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(entry.isIntersecting){ setActive(entry.target.id); }
+      });
+    }, { rootMargin: '-40% 0px -50% 0px', threshold: 0 });
+    sections.forEach(function(s){ observer.observe(s); });
+  })();
+
+  // Contact form -> mailto
+  document.getElementById('contactForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var name = document.getElementById('cf-name').value;
+    var email = document.getElementById('cf-email').value;
+    var msg = document.getElementById('cf-msg').value;
+    var subject = encodeURIComponent('Portfolio contact from ' + name);
+    var body = encodeURIComponent(msg + '\n\n— ' + name + ' (' + email + ')');
+    window.location.href = 'mailto:dd1125072@gmail.com?subject=' + subject + '&body=' + body;
+  });
+</script>
+
+</body>
+</html>
